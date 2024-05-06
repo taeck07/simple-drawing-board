@@ -1,0 +1,66 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true
+    },
+    // devDependencies에 설치한 plugin 추가
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        // "plugin:import/recommended",
+        // "plugin:import/typescript",
+        "plugin:react/recommended",
+        // "plugin:react-hooks/recommended",
+        // "plugin:jsx-a11y/recommended",
+        "plugin:prettier/recommended"
+    ],
+    "plugins": [ "react", "prettier"],
+    // typescript, react 설정
+    "parser": "@typescript-eslint/parser",
+    "settings": {
+        "import/parsers": {
+            "@typescript-eslint/parser": [".ts", ".tsx"]
+        },
+        "import/resolver": {
+            "typescript": {
+                "alwaysTryTypes": true,
+                "project": [
+                    "packages/*/tsconfig.json",
+                    "tsconfig.json"
+                ]
+            }
+        },
+    "react": {
+            "pragma": "React",
+            "version": "detect",
+            "fragment": "Fragment"
+        }
+    },
+    // 코드 작성 구조
+    "rules": {
+        "indent": ["error", 2],
+        "no-trailing-spaces": "error",
+        "curly": "error",
+        "brace-style": "error",
+        "no-multi-spaces": "error",
+        "space-infix-ops": "error",
+        "space-unary-ops": "error",
+        "no-whitespace-before-property": "error",
+        "func-call-spacing": "error",
+        "space-before-blocks": "error",
+        "keyword-spacing": ["error", { "before": true, "after": true }],
+        "comma-spacing": ["error", { "before": false, "after": true }],
+        "comma-style": ["error", "last"],
+        "comma-dangle": ["error", "always-multiline"],
+        "space-in-parens": ["error", "never"],
+        "block-spacing": "error",
+        "array-bracket-spacing": ["error", "never"],
+        "object-curly-spacing": ["error", "always"],
+        "key-spacing": ["error", { "mode": "strict" }],
+        "arrow-spacing": ["error", { "before": true, "after": true }],
+        "react/react-in-jsx-scope": "off",
+
+    }
+}
