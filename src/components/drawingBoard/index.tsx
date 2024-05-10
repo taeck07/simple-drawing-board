@@ -2,15 +2,14 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import styled, { css } from 'styled-components';
 import { AddShapeType, ShapeListType, ShapeTypes } from './types';
 import Shape, { ShapeStyles } from './shape';
+import { getShapeListToLocalStorage, saveShapeListToLocalStorage } from '@src/services/localstorage';
 
 const BoardContainer = styled.div`
   width: 100%;
   min-width: 500px;
   max-width: 1500px;
-  margin: 0 auto;
-  padding: 20px;
+  margin: 20px;
   position: relative;
-  overflow: hidden;
 `;
 
 const ActionsButtonWrap = styled.div`
@@ -22,7 +21,8 @@ const Pannel = styled.div`
   width: 100%;
   height: 700px;
   position: relative;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #00000080;
+  overflow: hidden;
   > p {
     position: absolute;
   }
@@ -35,27 +35,6 @@ const ActionsButton = styled.button<{ selected?: boolean }>`
       font-weight: bold;
     `}
 `;
-
-// type ShapeTypes = 'rect' | 'circle' | 'edit';
-
-const SHAPELIST: ShapeListType[] = [
-  {
-    id: '1',
-    type: 'rect',
-    x: 50,
-    y: 50,
-    width: 100,
-    height: 150,
-  },
-  {
-    id: '2',
-    type: 'circle',
-    x: 100,
-    y: 200,
-    width: 200,
-    height: 100,
-  },
-];
 
 const INIT_SHAPE: AddShapeType = {
   id: 'add',
@@ -71,7 +50,7 @@ const INIT_SHAPE: AddShapeType = {
 };
 
 export default function DrawingBoard() {
-  const [shapeList, setShapeList] = useState<ShapeListType[]>([...SHAPELIST]);
+  const [shapeList, setShapeList] = useState<ShapeListType[]>(getShapeListToLocalStorage());
   const [addShape, setAddShape] = useState<ShapeListType>();
   const target = useRef<AddShapeType>();
   const containerPos = useRef({ x: 0, y: 0 });
@@ -203,6 +182,10 @@ export default function DrawingBoard() {
   const handleShapeChange = useCallback((info: ShapeListType) => {
     setShapeList(list => list.map(shape => (shape.id === info.id ? info : shape)));
   }, []);
+
+  useEffect(() => {
+    saveShapeListToLocalStorage(shapeList);
+  }, [shapeList]);
 
   return (
     <BoardContainer>

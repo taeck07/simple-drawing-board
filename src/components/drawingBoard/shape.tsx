@@ -20,7 +20,7 @@ export const ShapeStyles = styled.div<{ type: 'rect' | 'circle'; active?: boolea
         height: calc(100% + 2px);
         top: -2px;
         left: -2px;
-        border: 1px dashed #dfdfdf;
+        border: 1px dashed #00000050;
       }
     `};
 `;
