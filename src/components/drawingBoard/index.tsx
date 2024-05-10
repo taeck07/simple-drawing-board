@@ -103,7 +103,6 @@ export default function DrawingBoard() {
 
   const addShapeMouseMove = useCallback(
     (e: globalThis.MouseEvent) => {
-      console.log('move');
       if (!target.current) {
         return;
       }
@@ -189,7 +188,6 @@ export default function DrawingBoard() {
 
   return (
     <BoardContainer>
-      {/* {JSON.stringify(addShape)} */}
       <ActionsButtonWrap>
         <ActionsButton selected={mode === 'rect'} onClick={() => setDrawMode('rect')}>
           Rect

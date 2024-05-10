@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
+import React, { MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
 import styled, { css } from 'styled-components';
 import { ShapeListType } from './types';
 
@@ -33,7 +33,7 @@ type PropTypes = {
   target: HTMLDivElement | null;
 };
 
-export default function Shape({ handleClick, active, info, handleShapeChange }: PropTypes) {
+function Shape({ handleClick, active, info, handleShapeChange }: PropTypes) {
   const [transform, setTransform] = useState<{ x: number; y: number }>();
   const { id, x, y, width, height, type } = info;
   const startInfo = useRef<{ startX: number; startY: number }>();
@@ -48,6 +48,12 @@ export default function Shape({ handleClick, active, info, handleShapeChange }: 
     };
   }, [active, transform]);
 
+  /**
+   *
+   * todo
+   * change mouse event to global
+   *
+   */
   function mouseDown(e: MouseEvent<HTMLDivElement>) {
     e.stopPropagation();
     startInfo.current = { startX: e.nativeEvent.pageX, startY: e.nativeEvent.pageY };
@@ -95,3 +101,5 @@ export default function Shape({ handleClick, active, info, handleShapeChange }: 
     </>
   );
 }
+
+export default React.memo(Shape);
