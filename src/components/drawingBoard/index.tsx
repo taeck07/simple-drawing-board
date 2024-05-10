@@ -1,5 +1,7 @@
-import { useState, MouseEvent, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import styled, { css } from 'styled-components';
+import { AddShapeType, ShapeListType, ShapeTypes } from './types';
+import Shape, { ShapeStyles } from './shape';
 
 const BoardContainer = styled.div`
   width: 100%;
@@ -26,29 +28,6 @@ const Pannel = styled.div`
   }
 `;
 
-const Shape = styled.div<{ type: ShapeTypes; active?: boolean }>`
-  position: absolute;
-  outline: 1px solid #000;
-  ${props =>
-    props.type === 'circle' &&
-    css`
-      border-radius: 50%;
-    `};
-  ${props =>
-    props.active &&
-    css`
-      &::after {
-        content: '';
-        position: absolute;
-        width: calc(100% + 2px);
-        height: calc(100% + 2px);
-        top: -2px;
-        left: -2px;
-        border: 1px dashed #dfdfdf;
-      }
-    `};
-`;
-
 const ActionsButton = styled.button<{ selected?: boolean }>`
   ${props =>
     props.selected &&
@@ -58,24 +37,6 @@ const ActionsButton = styled.button<{ selected?: boolean }>`
 `;
 
 // type ShapeTypes = 'rect' | 'circle' | 'edit';
-
-type ShapeTypes = 'circle' | 'rect';
-
-type ShapeListType = {
-  id: string;
-  type: ShapeTypes;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-type AddShapeType = ShapeListType & {
-  eventStartX: number;
-  eventStartY: number;
-  shapeStartX: number;
-  shapeStartY: number;
-};
 
 const SHAPELIST: ShapeListType[] = [
   {
@@ -113,7 +74,6 @@ export default function DrawingBoard() {
   const [shapeList, setShapeList] = useState<ShapeListType[]>([...SHAPELIST]);
   const [addShape, setAddShape] = useState<ShapeListType>();
   const target = useRef<AddShapeType>();
-  // const container = useRef<HTMLDivElement>(null);
   const containerPos = useRef({ x: 0, y: 0 });
   const [selectedId, setSelectedId] = useState<string>();
   const [mode, setMode] = useState<ShapeTypes>();
@@ -189,22 +149,13 @@ export default function DrawingBoard() {
     [setAddShape],
   );
 
-  function handleShapeClick(e: MouseEvent<HTMLDivElement>, id: string) {
-    e.stopPropagation();
+  function handleShapeClick(id: string) {
     setSelectedId(id);
     const selected = shapeList.find(shape => shape.id === id);
 
     if (!selected) {
       return;
     }
-
-    target.current = {
-      ...selected,
-      shapeStartX: selected.x,
-      shapeStartY: selected.y,
-      eventStartX: e.nativeEvent.clientX,
-      eventStartY: e.nativeEvent.clientY,
-    };
   }
 
   useEffect(() => {
@@ -221,13 +172,18 @@ export default function DrawingBoard() {
   }
 
   function removeDrawEvent() {
-    document.body.addEventListener('mousedown', addModeMouseDown);
-    document.body.addEventListener('mousemove', addShapeMouseMove);
-    document.body.addEventListener('mouseup', addShapeMouseUp);
+    document.body.removeEventListener('mousedown', addModeMouseDown);
+    document.body.removeEventListener('mousemove', addShapeMouseMove);
+    document.body.removeEventListener('mouseup', addShapeMouseUp);
   }
 
   function setDrawMode(type: ShapeTypes) {
     removeDrawEvent();
+    if (type === mode) {
+      setMode(undefined);
+      currentDrawMode.current = undefined;
+      return;
+    }
     currentDrawMode.current = type;
     addDrawEvent();
     setMode(type);
@@ -244,36 +200,36 @@ export default function DrawingBoard() {
     setShapeList(shapeList.filter(({ id }) => id !== selectedId));
   }
 
+  const handleShapeChange = useCallback((info: ShapeListType) => {
+    setShapeList(list => list.map(shape => (shape.id === info.id ? info : shape)));
+  }, []);
+
   return (
     <BoardContainer>
       {/* {JSON.stringify(addShape)} */}
       <ActionsButtonWrap>
-        <ActionsButton selected={mode === 'rect'} onClick={() => setDrawMode('rect')} disabled={mode === 'rect'}>
+        <ActionsButton selected={mode === 'rect'} onClick={() => setDrawMode('rect')}>
           Rect
         </ActionsButton>
-        <ActionsButton selected={mode === 'circle'} onClick={() => setDrawMode('circle')} disabled={mode === 'circle'}>
+        <ActionsButton selected={mode === 'circle'} onClick={() => setDrawMode('circle')}>
           Circle
         </ActionsButton>
         <ActionsButton onClick={handleSelectRemove}>Remove</ActionsButton>
         <ActionsButton onClick={handleClear}>Clear</ActionsButton>
       </ActionsButtonWrap>
-      <Pannel
-        ref={panel}
-        // onMouseDown={handlePanelMouseDown}
-        // onMouseMove={handlePanelMouseMove}
-        // onMouseUp={handlePanelMouseUp}
-      >
-        {shapeList.map(({ id, type, x, y, width, height }) => (
+      <Pannel ref={panel}>
+        {shapeList.map(info => (
           <Shape
-            key={id}
-            type={type}
-            style={{ left: x, top: y, width, height }}
-            onClick={e => handleShapeClick(e, id)}
-            active={selectedId === id}
+            key={info.id}
+            info={info}
+            active={info.id === selectedId}
+            handleClick={handleShapeClick}
+            handleShapeChange={handleShapeChange}
+            target={panel.current}
           />
         ))}
         {addShape && (
-          <Shape
+          <ShapeStyles
             type={addShape.type}
             style={{ left: addShape.x, top: addShape.y, width: addShape.width, height: addShape.height }}
           />
