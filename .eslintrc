@@ -40,7 +40,7 @@
     },
     // 코드 작성 구조
     "rules": {
-        "indent": ["error", 2],
+        "indent": ["error", 2, { "SwitchCase": 1 }],
         "no-trailing-spaces": "error",
         "curly": "error",
         "brace-style": "error",
@@ -61,6 +61,6 @@
         "key-spacing": ["error", { "mode": "strict" }],
         "arrow-spacing": ["error", { "before": true, "after": true }],
         "react/react-in-jsx-scope": "off",
-
+        "@typescript-eslint/no-unused-vars": ["error", { "ignoreRestSiblings": true }]
     }
 }
