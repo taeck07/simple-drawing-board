@@ -8,7 +8,7 @@ const BoardContainer = styled.div`
   width: 100%;
   min-width: 500px;
   max-width: 1500px;
-  margin: 20px;
+  padding: 20px;
   position: relative;
 `;
 
@@ -53,7 +53,7 @@ export default function DrawingBoard() {
   const [shapeList, setShapeList] = useState<ShapeListType[]>(getShapeListToLocalStorage());
   const [addShape, setAddShape] = useState<ShapeListType>();
   const target = useRef<AddShapeType>();
-  const containerPos = useRef({ x: 0, y: 0 });
+  const containerPos = useRef({ startX: 0, startY: 0, endX: 0, endY: 0 });
   const [selectedId, setSelectedId] = useState<string>();
   const [mode, setMode] = useState<ShapeTypes>();
   const panel = useRef<HTMLDivElement>(null);
@@ -64,22 +64,30 @@ export default function DrawingBoard() {
       if (!currentDrawMode.current) {
         return;
       }
+      if (
+        e.pageX < containerPos.current.startX ||
+        e.pageX > containerPos.current.endX ||
+        e.pageY < containerPos.current.startY ||
+        e.pageY > containerPos.current.endY
+      ) {
+        return;
+      }
       const addShapeId = new Date().getTime().toString();
       target.current = {
         ...INIT_SHAPE,
         type: currentDrawMode.current,
         eventStartX: e.pageX,
         eventStartY: e.pageY,
-        shapeStartX: e.pageX - containerPos.current.x,
-        shapeStartY: e.pageY - containerPos.current.y,
-        x: e.pageX - containerPos.current.x,
-        y: e.pageY - containerPos.current.y,
+        shapeStartX: e.pageX - containerPos.current.startX,
+        shapeStartY: e.pageY - containerPos.current.startY,
+        x: e.pageX - containerPos.current.startX,
+        y: e.pageY - containerPos.current.startY,
         id: addShapeId,
       };
       setAddShape(() => ({
         type: currentDrawMode.current as ShapeTypes,
-        x: e.pageX - containerPos.current.x,
-        y: e.pageY - containerPos.current.y,
+        x: e.pageX - containerPos.current.startX,
+        y: e.pageY - containerPos.current.startY,
         width: 0,
         height: 0,
         id: addShapeId,
@@ -94,9 +102,9 @@ export default function DrawingBoard() {
       return;
     }
     const { eventStartX, eventStartY, shapeStartX, shapeStartY, ...targetShape } = target.current;
-    setShapeList(list => [...list, { ...targetShape }]);
-    setAddShape(undefined);
-
+    if (targetShape.width && targetShape.height) {
+      setShapeList(list => [...list, { ...targetShape }]);
+    }
     setAddShape(undefined);
     target.current = undefined;
   };
@@ -127,19 +135,24 @@ export default function DrawingBoard() {
     [setAddShape],
   );
 
-  function handleShapeClick(id: string) {
-    setSelectedId(id);
-    const selected = shapeList.find(shape => shape.id === id);
-
-    if (!selected) {
-      return;
-    }
-  }
+  const handleShapeClick = useCallback(
+    (id?: string) => {
+      if (mode) {
+        return;
+      }
+      setSelectedId(id);
+    },
+    [mode],
+  );
 
   useEffect(() => {
     if (panel.current) {
-      containerPos.current.x = panel.current.offsetLeft;
-      containerPos.current.y = panel.current.offsetTop;
+      const startX = panel.current.offsetLeft;
+      const startY = panel.current.offsetTop;
+      containerPos.current.startX = startX;
+      containerPos.current.startY = startY;
+      containerPos.current.endX = startX + panel.current.offsetWidth;
+      containerPos.current.endY = startY + panel.current.offsetHeight;
     }
   }, []);
 
@@ -155,15 +168,17 @@ export default function DrawingBoard() {
     document.body.removeEventListener('mouseup', addShapeMouseUp);
   }
 
-  function setDrawMode(type: ShapeTypes) {
+  function setDrawMode(type?: ShapeTypes) {
     removeDrawEvent();
     if (type === mode) {
       setMode(undefined);
       currentDrawMode.current = undefined;
       return;
     }
+    if (type) {
+      addDrawEvent();
+    }
     currentDrawMode.current = type;
-    addDrawEvent();
     setMode(type);
   }
 
@@ -189,6 +204,7 @@ export default function DrawingBoard() {
   return (
     <BoardContainer>
       <ActionsButtonWrap>
+        <ActionsButton onClick={() => setDrawMode()}>Select</ActionsButton>
         <ActionsButton selected={mode === 'rect'} onClick={() => setDrawMode('rect')}>
           Rect
         </ActionsButton>
@@ -198,7 +214,7 @@ export default function DrawingBoard() {
         <ActionsButton onClick={handleSelectRemove}>Remove</ActionsButton>
         <ActionsButton onClick={handleClear}>Clear</ActionsButton>
       </ActionsButtonWrap>
-      <Pannel ref={panel}>
+      <Pannel ref={panel} onClick={() => handleShapeClick()}>
         {shapeList.map(info => (
           <Shape
             key={info.id}
